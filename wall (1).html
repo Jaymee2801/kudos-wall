@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Wall - KudosWall</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Segoe UI, Arial, sans-serif;
+            background: #020F07;
+            background-image:
+                radial-gradient(ellipse 70% 50% at 15% 15%, rgba(16,185,129,0.15) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 85% 85%, rgba(245,158,11,0.1) 0%, transparent 55%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        nav {
+            background: rgba(2,15,7,0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(16,185,129,0.15);
+            padding: 0 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; height: 60px;
+        }
+        .nav-logo { font-size: 1.15rem; font-weight: 800; background: linear-gradient(90deg,#10B981,#F59E0B); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.875rem; font-weight: 600; padding: 6px 14px; border-radius: 8px; transition: color 0.2s, background 0.2s; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+        .nav-links a.active { color: #10B981; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .wallet-chip { font-size: 0.75rem; color: #10B981; font-weight: 700; background: rgba(16,185,129,0.1); padding: 3px 10px; border-radius: 20px; display: none; border: 1px solid rgba(16,185,129,0.25); }
+        .connect-btn { background: linear-gradient(135deg,#10B981,#F59E0B); color: #020F07; border: none; padding: 9px 20px; border-radius: 10px; cursor: pointer; font-size: 0.875rem; font-weight: 800; box-shadow: 0 0 20px rgba(16,185,129,0.3); transition: opacity 0.2s; }
+        .connect-btn:hover { opacity: 0.9; }
+        .page-header { padding: 40px 24px 32px; text-align: center; position: relative; overflow: hidden; }
+        .page-header::before { content: ""; position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 600px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%); pointer-events: none; }
+        .page-header h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; position: relative; }
+        .page-header h1 span { background: linear-gradient(90deg,#10B981,#F59E0B); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: rgba(255,255,255,0.5); margin-top: 8px; font-size: 0.9rem; position: relative; }
+        .container { max-width: 680px; margin: 0 auto 40px; padding: 0 20px; }
+        .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-bottom: 12px; }
+        .kudo-card {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(16,185,129,0.12);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 12px;
+            display: flex; gap: 14px; align-items: flex-start;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .kudo-card:hover { border-color: rgba(16,185,129,0.3); box-shadow: 0 0 24px rgba(16,185,129,0.1); transform: translateY(-2px); }
+        .kudo-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#10B981,#F59E0B); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: #020F07; flex-shrink: 0; box-shadow: 0 0 12px rgba(16,185,129,0.3); }
+        .kudo-body { flex: 1; min-width: 0; }
+        .kudo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .kudo-from { font-size: 0.8rem; font-weight: 700; color: #10B981; }
+        .kudo-amount-badge { background: rgba(16,185,129,0.12); color: #6EE7B7; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.2); }
+        .kudo-message { font-size: 0.95rem; color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 8px; word-break: break-word; }
+        .kudo-footer { display: flex; gap: 12px; font-size: 0.72rem; color: rgba(255,255,255,0.3); }
+        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.3); }
+        .empty-state .emoji { font-size: 3rem; display: block; margin-bottom: 12px; }
+        .btn-link { background: linear-gradient(135deg,#10B981,#F59E0B); color: #020F07; border: none; padding: 10px 22px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 800; text-decoration: none; display: inline-block; margin-top: 16px; box-shadow: 0 0 16px rgba(16,185,129,0.25); }
+        @media (max-width: 600px) {
+            .nav-links { display: none; }
+            .page-header h1 { font-size: 1.7rem; }
+            .kudo-card { padding: 14px; gap: 10px; }
+            .kudo-message { font-size: 0.88rem; }
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-logo">KudosWall</div>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="wall.html" class="active">The Wall</a>
+        <a href="causes.html">Causes</a>
+        <a href="leaderboard.html">Leaderboard</a>
+    </div>
+    <div class="nav-right">
+        <span class="wallet-chip" id="walletChip"></span>
+        <button class="connect-btn" id="connectBtn">Connect Wallet</button>
+    </div>
+</nav>
+<div class="page-header">
+    <h1><span>The Wall</span> 🏆</h1>
+    <p>Every kudo ever sent — permanent, public, onchain.</p>
+</div>
+<div class="container">
+    <p class="section-label" id="wallLabel">Connect wallet to load</p>
+    <div id="kudosList">
+        <div class="empty-state">
+            <span class="emoji">👀</span>
+            <p>Connect your wallet to see all kudos</p>
+            <a href="index.html" class="btn-link">Send the first one</a>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script>
+    const KUDOSWALL_ADDRESS = "0x98C82C9FAdEf0303D569e1A94550C919Fce5792B";
+    const KUDOSWALL_ABI = ["function getAllKudos() public view returns (tuple(address sender, address recipient, string message, uint256 amount, uint256 timestamp)[])"];
+    var userAddress = null;
+
+    function setConnected(addr) {
+        userAddress = addr;
+        var btn = document.getElementById("connectBtn");
+        btn.textContent = "Connected"; btn.style.background = "rgba(16,185,129,0.15)"; btn.style.color = "#10B981"; btn.style.border = "1px solid rgba(16,185,129,0.3)"; btn.style.boxShadow = "none";
+        document.getElementById("walletChip").textContent = addr.slice(0,6) + "..." + addr.slice(-4);
+        document.getElementById("walletChip").style.display = "inline-block";
+    }
+
+    document.getElementById("connectBtn").addEventListener("click", async function() {
+        if (typeof window.ethereum === "undefined") { alert("Please install MetaMask!"); return; }
+        try {
+            var provider = new ethers.BrowserProvider(window.ethereum);
+            var accounts = await provider.send("eth_requestAccounts", []);
+            setConnected(accounts[0]);
+            loadKudos();
+        } catch(err) { alert("Connection failed: " + err.message); }
+    });
+
+    async function loadKudos() {
+        try {
+            var provider = new ethers.BrowserProvider(window.ethereum);
+            var kw = new ethers.Contract(KUDOSWALL_ADDRESS, KUDOSWALL_ABI, provider);
+            var kudos = await kw.getAllKudos();
+            var list = document.getElementById("kudosList");
+            document.getElementById("wallLabel").textContent = kudos.length + " kudos on the wall";
+            if (kudos.length === 0) {
+                list.innerHTML = "<div class='empty-state'><span class='emoji'>🌱</span><p>No kudos yet. Be the first!</p><a href='index.html' class='btn-link'>Send Kudos</a></div>";
+                return;
+            }
+            var reversed = [...kudos].reverse();
+            list.innerHTML = reversed.map(function(kudo) {
+                var date = new Date(Number(kudo.timestamp) * 1000).toLocaleDateString();
+                var amount = (Number(kudo.amount) / 1000000).toFixed(2);
+                var from = kudo.sender.slice(0,6) + "..." + kudo.sender.slice(-4);
+                var to = kudo.recipient.slice(0,6) + "..." + kudo.recipient.slice(-4);
+                var initials = from.slice(2,4).toUpperCase();
+                return "<div class='kudo-card'><div class='kudo-avatar'>" + initials + "</div><div class='kudo-body'><div class='kudo-header'><span class='kudo-from'>" + from + "</span><span class='kudo-amount-badge'>+" + amount + " USDC</span></div><p class='kudo-message'>" + kudo.message + "</p><div class='kudo-footer'><span>To: " + to + "</span><span>" + date + "</span></div></div></div>";
+            }).join("");
+        } catch(err) { console.error(err); }
+    }
+
+    if (typeof window.ethereum !== "undefined") {
+        window.ethereum.request({ method: "eth_accounts" }).then(function(accounts) {
+            if (accounts.length > 0) { setConnected(accounts[0]); loadKudos(); }
+        });
+    }
+</script>
+</body>
+</html>

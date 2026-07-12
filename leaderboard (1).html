@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - KudosWall</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Segoe UI, Arial, sans-serif;
+            background: #020F07;
+            background-image:
+                radial-gradient(ellipse 70% 50% at 10% 20%, rgba(16,185,129,0.15) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 90% 80%, rgba(245,158,11,0.1) 0%, transparent 55%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        nav { background: rgba(2,15,7,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(16,185,129,0.15); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; height: 60px; }
+        .nav-logo { font-size: 1.15rem; font-weight: 800; background: linear-gradient(90deg,#10B981,#F59E0B); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.875rem; font-weight: 600; padding: 6px 14px; border-radius: 8px; transition: color 0.2s, background 0.2s; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+        .nav-links a.active { color: #10B981; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .wallet-chip { font-size: 0.75rem; color: #10B981; font-weight: 700; background: rgba(16,185,129,0.1); padding: 3px 10px; border-radius: 20px; display: none; border: 1px solid rgba(16,185,129,0.25); }
+        .connect-btn { background: linear-gradient(135deg,#10B981,#F59E0B); color: #020F07; border: none; padding: 9px 20px; border-radius: 10px; cursor: pointer; font-size: 0.875rem; font-weight: 800; box-shadow: 0 0 20px rgba(16,185,129,0.3); transition: opacity 0.2s; }
+        .connect-btn:hover { opacity: 0.9; }
+        .page-header { padding: 40px 24px 32px; text-align: center; position: relative; overflow: hidden; }
+        .page-header::before { content: ""; position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 600px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%); pointer-events: none; }
+        .page-header h1 { font-size: 2.2rem; font-weight: 900; position: relative; }
+        .page-header h1 span { background: linear-gradient(90deg,#10B981,#F59E0B); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: rgba(255,255,255,0.5); margin-top: 8px; font-size: 0.9rem; position: relative; }
+        .container { max-width: 680px; margin: 0 auto 40px; padding: 0 20px; }
+        .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-bottom: 16px; }
+        .leaderboard-table {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(16,185,129,0.12);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .leaderboard-row { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.2s; }
+        .leaderboard-row:last-child { border-bottom: none; }
+        .leaderboard-row:hover { background: rgba(16,185,129,0.04); }
+        .leaderboard-row.top1 { background: linear-gradient(90deg, rgba(245,158,11,0.08), transparent); }
+        .leaderboard-row.top2 { background: linear-gradient(90deg, rgba(148,163,184,0.06), transparent); }
+        .leaderboard-row.top3 { background: linear-gradient(90deg, rgba(180,83,9,0.06), transparent); }
+        .rank { font-size: 1.3rem; width: 28px; flex-shrink: 0; text-align: center; }
+        .avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#10B981,#F59E0B); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: #020F07; flex-shrink: 0; box-shadow: 0 0 12px rgba(16,185,129,0.25); }
+        .info { flex: 1; }
+        .address { font-size: 0.85rem; font-weight: 700; color: #10B981; }
+        .kudos-count { font-size: 0.72rem; color: rgba(255,255,255,0.3); margin-top: 2px; }
+        .usdc-badge { background: rgba(16,185,129,0.1); color: #6EE7B7; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(16,185,129,0.2); white-space: nowrap; }
+        .empty-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.3); }
+        .empty-state .emoji { font-size: 3rem; display: block; margin-bottom: 12px; }
+        @media (max-width: 600px) {
+            .nav-links { display: none; }
+            .page-header h1 { font-size: 1.7rem; }
+            .leaderboard-row { padding: 12px 14px; gap: 10px; }
+            .address { font-size: 0.8rem; }
+            .usdc-badge { font-size: 0.72rem; padding: 3px 8px; }
+        }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-logo">KudosWall</div>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="wall.html">The Wall</a>
+        <a href="causes.html">Causes</a>
+        <a href="leaderboard.html" class="active">Leaderboard</a>
+    </div>
+    <div class="nav-right">
+        <span class="wallet-chip" id="walletChip"></span>
+        <button class="connect-btn" id="connectBtn">Connect Wallet</button>
+    </div>
+</nav>
+<div class="page-header">
+    <h1><span>Leaderboard</span> 🏅</h1>
+    <p>Top recipients ranked by total USDC received onchain.</p>
+</div>
+<div class="container">
+    <p class="section-label" id="boardLabel">Connect wallet to load</p>
+    <div id="leaderboard">
+        <div class="empty-state">
+            <span class="emoji">🏆</span>
+            <p>Connect your wallet to see the leaderboard</p>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script>
+    const KUDOSWALL_ADDRESS = "0x98C82C9FAdEf0303D569e1A94550C919Fce5792B";
+    const KUDOSWALL_ABI = ["function getAllKudos() public view returns (tuple(address sender, address recipient, string message, uint256 amount, uint256 timestamp)[])"];
+    var userAddress = null;
+
+    function setConnected(addr) {
+        userAddress = addr;
+        var btn = document.getElementById("connectBtn");
+        btn.textContent = "Connected"; btn.style.background = "rgba(16,185,129,0.15)"; btn.style.color = "#10B981"; btn.style.border = "1px solid rgba(16,185,129,0.3)"; btn.style.boxShadow = "none";
+        document.getElementById("walletChip").textContent = addr.slice(0,6) + "..." + addr.slice(-4);
+        document.getElementById("walletChip").style.display = "inline-block";
+    }
+
+    document.getElementById("connectBtn").addEventListener("click", async function() {
+        if (typeof window.ethereum === "undefined") { alert("Please install MetaMask!"); return; }
+        try {
+            var provider = new ethers.BrowserProvider(window.ethereum);
+            var accounts = await provider.send("eth_requestAccounts", []);
+            setConnected(accounts[0]);
+            loadLeaderboard();
+        } catch(err) { alert("Connection failed: " + err.message); }
+    });
+
+    async function loadLeaderboard() {
+        try {
+            var provider = new ethers.BrowserProvider(window.ethereum);
+            var kw = new ethers.Contract(KUDOSWALL_ADDRESS, KUDOSWALL_ABI, provider);
+            var kudos = await kw.getAllKudos();
+            var board = document.getElementById("leaderboard");
+            if (kudos.length === 0) {
+                board.innerHTML = "<div class='empty-state'><span class='emoji'>🌱</span><p>No kudos yet. The leaderboard is empty!</p></div>";
+                return;
+            }
+            var totals = {};
+            kudos.forEach(function(k) {
+                var addr = k.recipient;
+                if (!totals[addr]) totals[addr] = { usdc: 0, count: 0 };
+                totals[addr].usdc += Number(k.amount);
+                totals[addr].count += 1;
+            });
+            var ranked = Object.entries(totals).sort(function(a,b) { return b[1].usdc - a[1].usdc; });
+            document.getElementById("boardLabel").textContent = ranked.length + " unique recipients";
+            var medals = ["🥇","🥈","🥉"];
+            var rowClasses = ["top1","top2","top3"];
+            board.innerHTML = "<div class='leaderboard-table'>" + ranked.map(function(entry, i) {
+                var addr = entry[0], data = entry[1];
+                var short = addr.slice(0,6) + "..." + addr.slice(-4);
+                var initials = addr.slice(2,4).toUpperCase();
+                var usdc = (data.usdc / 1000000).toFixed(2);
+                var medal = medals[i] || "#" + (i+1);
+                var rowClass = rowClasses[i] || "";
+                return "<div class='leaderboard-row " + rowClass + "'><span class='rank'>" + medal + "</span><div class='avatar'>" + initials + "</div><div class='info'><div class='address'>" + short + "</div><div class='kudos-count'>" + data.count + " kudo" + (data.count !== 1 ? "s" : "") + " received</div></div><span class='usdc-badge'>" + usdc + " USDC</span></div>";
+            }).join("") + "</div>";
+        } catch(err) { console.error(err); }
+    }
+
+    if (typeof window.ethereum !== "undefined") {
+        window.ethereum.request({ method: "eth_accounts" }).then(function(accounts) {
+            if (accounts.length > 0) { setConnected(accounts[0]); loadLeaderboard(); }
+        });
+    }
+</script>
+</body>
+</html>
