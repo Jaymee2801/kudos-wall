@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent - KudosWall</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Segoe UI, Arial, sans-serif;
+            background: #020F07;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 10% 10%, rgba(16,185,129,0.18) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 50% at 90% 90%, rgba(245,158,11,0.12) 0%, transparent 55%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        nav { background: rgba(2,15,7,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(16,185,129,0.15); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; height: 60px; }
+        .nav-logo { font-size: 1.15rem; font-weight: 800; background: linear-gradient(90deg,#10B981,#F59E0B); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 4px; }
+        .nav-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.875rem; font-weight: 600; padding: 6px 14px; border-radius: 8px; transition: color 0.2s, background 0.2s; }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+        .nav-links a.active { color: #10B981; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .wallet-chip { font-size: 0.75rem; color: #10B981; font-weight: 700; background: rgba(16,185,129,0.1); padding: 3px 10px; border-radius: 20px; display: none; border: 1px solid rgba(16,185,129,0.25); }
+        .connect-btn { background: linear-gradient(135deg,#10B981,#F59E0B); color: #020F07; border: none; padding: 9px 20px; border-radius: 10px; cursor: pointer; font-size: 0.875rem; font-weight: 800; box-shadow: 0 0 20px rgba(16,185,129,0.3); transition: opacity 0.2s; }
+        .connect-btn:hover { opacity: 0.9; }
+        .page-header { padding: 56px 24px 40px; text-align: center; position: relative; overflow: hidden; }
+        .orb-1 { position: absolute; top: -100px; left: -100px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%); animation: orbFloat 9s ease-in-out infinite; pointer-events: none; }
+        .orb-2 { position: absolute; bottom: -80px; right: -80px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%); animation: orbFloat 12s ease-in-out infinite reverse; pointer-events: none; }
+        @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.05); } 66% { transform: translate(-20px,20px) scale(0.95); } }
+        .agent-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #10B981; font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; position: relative; }
+        .agent-dot { width: 6px; height: 6px; background: #10B981; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
+        .page-header h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -1.5px; line-height: 1.1; position: relative; }
+        .page-header h1 .grad { background: linear-gradient(90deg,#10B981,#F59E0B); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: rgba(255,255,255,0.55); margin-top: 12px; font-size: 1rem; max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.7; position: relative; }
+        .steps { display: flex; justify-content: center; gap: 0; margin: 32px auto 0; max-width: 700px; padding: 0 20px; position: relative; }
+        .steps::before { content: ""; position: absolute; top: 20px; left: calc(10% + 30px); right: calc(10% + 30px); height: 1px; background: linear-gradient(90deg, rgba(16,185,129,0.3), rgba(245,158,11,0.3)); }
+        .step { flex: 1; text-align: center; position: relative; }
+        .step-num { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#10B981,#F59E0B); color: #020F07; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; box-shadow: 0 0 16px rgba(16,185,129,0.3); }
+        .step-label { font-size: 0.72rem; color: rgba(255,255,255,0.45); font-weight: 600; }
+        .container { max-width: 620px; margin: 40px auto; padding: 0 20px; }
+        .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-bottom: 12px; }
+        .card { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(16,185,129,0.15); border-radius: 20px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06); margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; color: rgba(255,255,255,0.4); margin-bottom: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+        .form-group input, .form-group textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 12px 14px; border-radius: 10px; font-size: 0.95rem; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: rgba(16,185,129,0.5); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+        .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
+        .form-group textarea { height: 80px; resize: none; }
+        .generate-btn { background: linear-gradient(135deg,#10B981,#F59E0B); color: #020F07; border: none; padding: 13px; border-radius: 12px; cursor: pointer; font-size: 0.95rem; font-weight: 800; width: 100%; transition: opacity 0.2s, transform 0.15s; box-shadow: 0 0 24px rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .generate-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .generate-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+        .result-card { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 20px; padding: 24px; display: none; box-shadow: 0 0 40px rgba(16,185,129,0.1), inset 0 1px 0 rgba(255,255,255,0.06); }
+        .result-card.visible { display: block; }
+        .result-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #10B981; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .result-message { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px; font-size: 0.95rem; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 14px; min-height: 60px; font-style: italic; }
+        .result-actions { display: flex; gap: 10px; }
+        .btn-send { flex: 1; background: linear-gradient(135deg,#10B981,#F59E0B); color: #020F07; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 800; transition: opacity 0.2s; box-shadow: 0 0 16px rgba(16,185,129,0.25); }
+        .btn-send:hover { opacity: 0.9; }
+        .btn-send:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn-regen { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s; }
+        .btn-regen:hover { background: rgba(255,255,255,0.1); }
+        .status { margin-top: 12px; padding: 11px 14px; border-radius: 10px; display: none; font-size: 0.85rem; font-weight: 600; line-height: 1.5; }
+        .status.success { background: rgba(16,185,129,0.1); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.25); display: block; }
+        .status.error { background: rgba(239,68,68,0.1); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.25); display: block; }
+        .status.loading { background: rgba(245,158,11,0.1); color: #FCD34D; border: 1px solid rgba(245,158,11,0.25); display: block; }
+        @media (max-width: 600px) { .nav-links { display: none; } .page-header h1 { font-size: 1.9rem; } .result-actions { flex-direction: column; } }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-logo">KudosWall</div>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="wall.html">The Wall</a>
+        <a href="causes.html">Causes</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="agent.html" class="active">AI Agent</a>
+    </div>
+    <div class="nav-right">
+        <span class="wallet-chip" id="walletChip"></span>
+        <button class="connect-btn" id="connectBtn">Connect Wallet</button>
+    </div>
+</nav>
+
+<div class="page-header">
+    <div class="orb-1"></div>
+    <div class="orb-2"></div>
+    <div class="agent-badge">
+        <span class="agent-dot"></span>
+        AI Agent Active
+    </div>
+    <h1>Nominate someone<br>for <span class="grad">Onchain Kudos</span></h1>
+    <p>Paste a tweet or describe what they did — Claude writes the perfect appreciation message and sends USDC automatically.</p>
+    <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-label">Nominate</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-label">AI Writes</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-label">You Approve</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-label">USDC Sent</div></div>
+    </div>
+</div>
+
+<div class="container">
+    <p class="section-label">Nomination Form</p>
+    <div class="card">
+        <div class="form-group">
+            <label>Their Wallet Address</label>
+            <input type="text" id="recipientAddr" placeholder="0x...">
+        </div>
+        <div class="form-group">
+            <label>Tweet URL or Tweet Text</label>
+            <textarea id="tweetContent" placeholder="Paste the tweet URL or copy-paste the tweet text here..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Why do they deserve kudos?</label>
+            <input type="text" id="whyText" placeholder="e.g. shared incredible onchain knowledge, helped 1000 devs...">
+        </div>
+        <div class="form-group">
+            <label>Amount (USDC)</label>
+            <input type="number" id="kudosAmount" placeholder="1.00" min="0.1" step="0.1" value="1">
+        </div>
+        <button class="generate-btn" id="generateBtn" onclick="generateMessage()">
+            <span>✨</span> Generate Kudos with AI
+        </button>
+    </div>
+
+    <div class="result-card" id="resultCard">
+        <div class="result-label"><span>🤖</span> AI-Generated Message</div>
+        <div class="result-message" id="generatedMessage">Generating...</div>
+        <div class="result-actions">
+            <button class="btn-send" id="sendBtn" onclick="sendKudos()">Send Kudos + USDC →</button>
+            <button class="btn-regen" onclick="generateMessage()">Regenerate</button>
+        </div>
+        <div class="status" id="status"></div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<script>
+    const KUDOSWALL_ADDRESS = "0x98C82C9FAdEf0303D569e1A94550C919Fce5792B";
+    const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
+    const KUDOSWALL_ABI = ["function sendKudos(address recipient, string memory message, uint256 amount) public"];
+    const USDC_ABI = ["function approve(address spender, uint256 amount) external returns (bool)"];
+
+    let userAddress = null, provider = null, signer = null, generatedMsg = "";
+
+    function setConnected(addr) {
+        userAddress = addr;
+        var btn = document.getElementById("connectBtn");
+        btn.textContent = "Connected";
+        btn.style.background = "rgba(16,185,129,0.15)";
+        btn.style.color = "#10B981";
+        btn.style.border = "1px solid rgba(16,185,129,0.3)";
+        btn.style.boxShadow = "none";
+        document.getElementById("walletChip").textContent = addr.slice(0,6) + "..." + addr.slice(-4);
+        document.getElementById("walletChip").style.display = "inline-block";
+    }
+
+    document.getElementById("connectBtn").addEventListener("click", async function() {
+        if (typeof window.ethereum === "undefined") { alert("Please install MetaMask!"); return; }
+        try {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            var accounts = await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            setConnected(accounts[0]);
+        } catch(err) { alert("Connection failed: " + err.message); }
+    });
+
+    async function generateMessage() {
+        var recipient = document.getElementById("recipientAddr").value.trim();
+        var tweet = document.getElementById("tweetContent").value.trim();
+        var why = document.getElementById("whyText").value.trim();
+
+        if (!tweet && !why) { alert("Please paste the tweet or describe why they deserve kudos."); return; }
+        if (!recipient || !recipient.startsWith("0x") || recipient.length !== 42) { alert("Please enter a valid wallet address first."); return; }
+
+        var generateBtn = document.getElementById("generateBtn");
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = "<span>⏳</span> Claude is thinking...";
+
+        var resultCard = document.getElementById("resultCard");
+        var msgEl = document.getElementById("generatedMessage");
+        resultCard.classList.add("visible");
+        msgEl.textContent = "Generating your personalised kudos message...";
+
+        try {
+            var response = await fetch("/api/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tweet: tweet, why: why, recipient: recipient })
+            });
+
+            var data = await response.json();
+
+            if (data.error) {
+                msgEl.textContent = "Error: " + data.error;
+                return;
+            }
+
+            generatedMsg = data.message;
+            msgEl.textContent = generatedMsg;
+
+        } catch(err) {
+            msgEl.textContent = "Failed to generate message. Please try again.";
+            console.error(err);
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = "<span>✨</span> Generate Kudos with AI";
+        }
+    }
+
+    async function sendKudos() {
+        if (!userAddress) { alert("Please connect your wallet first!"); return; }
+        if (!generatedMsg) { alert("Please generate a message first."); return; }
+
+        var recipient = document.getElementById("recipientAddr").value.trim();
+        var amountInput = parseFloat(document.getElementById("kudosAmount").value);
+
+        if (!recipient || !recipient.startsWith("0x") || recipient.length !== 42) { alert("Please enter a valid wallet address."); return; }
+        if (!amountInput || amountInput <= 0) { alert("Please enter a valid amount."); return; }
+
+        var amount = BigInt(Math.floor(amountInput * 1000000));
+        var status = document.getElementById("status");
+        var sendBtn = document.getElementById("sendBtn");
+
+        sendBtn.disabled = true; sendBtn.textContent = "Processing...";
+        status.className = "status loading";
+        status.textContent = "Step 1/2: Approving USDC... confirm in MetaMask";
+
+        try {
+            var network = await provider.getNetwork();
+            if (network.chainId !== BigInt(5042002)) throw new Error("WRONG_NETWORK");
+
+            var usdc = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
+            await (await usdc.approve(KUDOSWALL_ADDRESS, amount)).wait();
+
+            status.textContent = "Step 2/2: Sending kudos... confirm in MetaMask";
+
+            var kw = new ethers.Contract(KUDOSWALL_ADDRESS, KUDOSWALL_ABI, signer);
+            await (await kw.sendKudos(recipient, "[AI Agent] " + generatedMsg, amount)).wait();
+
+            status.className = "status success";
+            status.textContent = "Kudos sent onchain! It will appear on The Wall forever.";
+
+            document.getElementById("recipientAddr").value = "";
+            document.getElementById("tweetContent").value = "";
+            document.getElementById("whyText").value = "";
+            document.getElementById("kudosAmount").value = "1";
+            document.getElementById("resultCard").classList.remove("visible");
+            generatedMsg = "";
+
+        } catch(err) {
+            status.className = "status error";
+            if (err.message === "WRONG_NETWORK") status.textContent = "Wrong network. Switch to Arc Testnet.";
+            else if (err.code === 4001 || (err.message && err.message.includes("user rejected"))) status.textContent = "Cancelled.";
+            else status.textContent = "Error: " + (err.reason || err.message);
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.textContent = "Send Kudos + USDC →";
+        }
+    }
+
+    if (typeof window.ethereum !== "undefined") {
+        window.ethereum.request({ method: "eth_accounts" }).then(function(accounts) {
+            if (accounts.length > 0) {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                provider.getSigner().then(function(s) { signer = s; });
+                setConnected(accounts[0]);
+            }
+        });
+    }
+</script>
+</body>
+</html>
